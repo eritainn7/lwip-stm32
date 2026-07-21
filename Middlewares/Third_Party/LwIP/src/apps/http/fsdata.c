@@ -1413,7 +1413,7 @@ static const unsigned char data_makefsdata_pl[] = {
 
 const struct fsdata_file file_index_shtml[] = {{NULL, data_index_shtml, data_index_shtml + 13, sizeof(data_index_shtml) - 13}};
 
-const struct fsdata_file file_getTempAndLight_shtml[] = {{file_index_shtml, data_getTempAndLight_shtml, data_getTempAndLight_shtml + 23, sizeof(data_getTempAndLight_shtml) - 23}, FS_FILE_FLAGS_SSI};
+const struct fsdata_file file_getTempAndLight_shtml[] = {{file_index_shtml, data_getTempAndLight_shtml, data_getTempAndLight_shtml + 23, sizeof(data_getTempAndLight_shtml) - 23, FS_FILE_FLAGS_SSI}};
 
 const struct fsdata_file file_fsdata_custom_c[] = {{file_getTempAndLight_shtml, data_fsdata_custom_c, data_fsdata_custom_c + 17, sizeof(data_fsdata_custom_c) - 17}};
 
