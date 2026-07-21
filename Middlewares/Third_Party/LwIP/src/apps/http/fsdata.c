@@ -1,3 +1,4 @@
+/* USER CODE BEGIN 0 */
 #include "lwip/apps/fs.h"
 #include <stddef.h>  
 
@@ -1422,3 +1423,4 @@ const struct fsdata_file file_makefsdata_pl[] = {{file_fsdata_custom_c, data_mak
 #define FS_ROOT file_makefsdata_pl
 
 #define FS_NUMFILES 4
+/* USER CODE END 0 */
