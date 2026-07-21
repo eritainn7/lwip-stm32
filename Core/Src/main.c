@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lwip/apps/httpd.h"
+#include "cgi_handlers.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,6 +91,7 @@ int main(void)
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
   httpd_init();
+  http_set_cgi_handlers(cgi_handlers, cgi_handlers_count); 
   uint32_t count = 0;
   /* USER CODE END 2 */
 
@@ -100,7 +102,7 @@ int main(void)
     MX_LWIP_Process();
     count++;
     if (count >= 10000) {
-      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+      //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
       count = 0;
     }
     /* USER CODE END WHILE */
