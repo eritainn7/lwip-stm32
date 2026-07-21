@@ -5,6 +5,7 @@
 
 // Прототипы функций-обработчиков
 const char *hello_world_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
+const char *getTempAndLight(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 
 // Экспорт массива обработчиков
 extern const tCGI cgi_handlers[];

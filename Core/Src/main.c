@@ -23,13 +23,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "http_handlers.h"
 #include "lwip/apps/httpd.h"
 #include "cgi_handlers.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define LWIP_HTTPD_CGI_EXTENSIONS "cgi,html,htm"
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -90,6 +91,7 @@ int main(void)
   MX_GPIO_Init();
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
+  http_handlers_init();
   httpd_init();
   http_set_cgi_handlers(cgi_handlers, cgi_handlers_count); 
   uint32_t count = 0;

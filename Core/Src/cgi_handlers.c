@@ -2,24 +2,30 @@
 #include "main.h"
 #include <string.h>
 #include <stdlib.h>
+#include "lwip/apps/httpd.h"  
 
 // Обработчик для главной страницы
-const char *hello_world_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[])
+const char *led_green_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[])
 {
-      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-      HAL_Delay(1000);
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    return NULL;
+}
 
-  if (iIndex == 0)
-  {
-    return "Hello World!";
-  }
-  return NULL;
+const char *led_blue_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+    return NULL;
+}
+
+const char *led_red_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+    return NULL;
 }
 
 // Массив обработчиков
 const tCGI cgi_handlers[] = {
-  {"/hello_world", hello_world_handler},
+  {"/led_green.cgi", led_green_handler},
+  {"/led_blue.cgi", led_blue_handler},
+  {"/led_red.cgi", led_red_handler}
 };
 
 // Количество обработчиков
