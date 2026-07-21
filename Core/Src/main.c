@@ -94,7 +94,6 @@ int main(void)
   http_handlers_init();
   httpd_init();
   http_set_cgi_handlers(cgi_handlers, cgi_handlers_count); 
-  uint32_t count = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,11 +101,8 @@ int main(void)
   while (1)
   {
     MX_LWIP_Process();
-    count++;
-    if (count >= 10000) {
-      //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-      count = 0;
-    }
+    ssi_update_data();   // Данные (обновляет переменные)
+    HAL_Delay(1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
