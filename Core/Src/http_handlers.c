@@ -7,42 +7,24 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN PV */
-// Структура для SSI данных
-typedef struct {
-    char sensor_value[32];
-    char device_status[32];
-    char timestamp[32];
-} SSI_Data_t;
+// Данные датчиков
+static char temperature_str[32];
+static char light_str[32];
+static char timestamp_str[32];
 
-static SSI_Data_t ssi_data;
-
-// SSI теги
+// Список SSI тегов
 enum SSI_TAGS {
-    SSI_SENSOR_VALUE = 0,
-    SSI_DEVICE_STATUS,
+    SSI_TEMPERATURE = 0,
+    SSI_LIGHT,
     SSI_TIMESTAMP,
     SSI_COUNT
 };
 
-const char *ssi_tags[] = {
-    "sensor",
-    "status", 
-    "time"
+const char *ssi_tags[SSI_COUNT] = {
+    "temperature",   // <!--#temperature-->
+    "light",         // <!--#light-->
+    "timestamp"      // <!--#timestamp-->
 };
-
-// Предварительное объявление CGI обработчиков (старый API)
-static const char *cgi_control_handler(int iIndex, int iNumParams, 
-                                        char *pcParam[], char *pcValue[]);
-static const char *cgi_status_handler(int iIndex, int iNumParams, 
-                                       char *pcParam[], char *pcValue[]);
-
-// Структура CGI обработчиков (используем отдельные функции)
-static const tCGI cgi_handlers[] = {
-    {"/cgi/control", cgi_control_handler},
-    {"/cgi/status", cgi_status_handler}
-};
-
-#define NUM_CGI_HANDLERS (sizeof(cgi_handlers) / sizeof(cgi_handlers[0]))
 /* USER CODE END PV */
 
 /* USER CODE BEGIN 0 */
@@ -50,19 +32,20 @@ static const tCGI cgi_handlers[] = {
 u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 {
     switch(iIndex) {
-        case SSI_SENSOR_VALUE:
-            strncpy(pcInsert, ssi_data.sensor_value, iInsertLen);
+        case SSI_TEMPERATURE:
+            strncpy(pcInsert, temperature_str, iInsertLen);
             break;
             
-        case SSI_DEVICE_STATUS:
-            strncpy(pcInsert, ssi_data.device_status, iInsertLen);
+        case SSI_LIGHT:
+            strncpy(pcInsert, light_str, iInsertLen);
             break;
             
         case SSI_TIMESTAMP:
-            strncpy(pcInsert, ssi_data.timestamp, iInsertLen);
+            strncpy(pcInsert, timestamp_str, iInsertLen);
             break;
             
         default:
+            pcInsert[0] = '\0';
             return 0;
     }
     
@@ -82,16 +65,16 @@ static const char *cgi_control_handler(int iIndex, int iNumParams,
         if(strcmp(pcParam[i], "action") == 0) {
             if(strcmp(pcValue[i], "reset") == 0) {
                 printf("CGI: Reset command received\r\n");
-                strcpy(ssi_data.device_status, "Reset");
+                strcpy(temperature_str, "Reset");
             } else if(strcmp(pcValue[i], "start") == 0) {
                 printf("CGI: Start command received\r\n");
-                strcpy(ssi_data.device_status, "Running");
+                strcpy(temperature_str, "Running");
             } else if(strcmp(pcValue[i], "stop") == 0) {
                 printf("CGI: Stop command received\r\n");
-                strcpy(ssi_data.device_status, "Stopped");
+                strcpy(temperature_str, "Stopped");
             } else if(strcmp(pcValue[i], "normal") == 0) {
                 printf("CGI: Normal mode command received\r\n");
-                strcpy(ssi_data.device_status, "Normal");
+                strcpy(temperature_str, "Normal");
             }
         }
     }
@@ -100,7 +83,7 @@ static const char *cgi_control_handler(int iIndex, int iNumParams,
     return "/index.html";
 }
 
-// CGI обработчик для /cgi/status (старый API)
+// // CGI обработчик для /cgi/status (старый API)
 static const char *cgi_status_handler(int iIndex, int iNumParams, 
                                        char *pcParam[], char *pcValue[])
 {
@@ -115,7 +98,7 @@ static const char *cgi_status_handler(int iIndex, int iNumParams,
     return "/status.html";
 }
 
-// Заглушка для httpd_cgi_handler (требуется линковщиком, но не используется)
+// // Заглушка для httpd_cgi_handler (требуется линковщиком, но не используется)
 void httpd_cgi_handler(struct fs_file *file, const char* uri, 
                        int iNumParams, char **pcParam, char **pcValue)
 {
@@ -128,8 +111,22 @@ void httpd_cgi_handler(struct fs_file *file, const char* uri,
     }
 }
 
-// Обновление SSI данных
-void update_ssi_data(void)
+// Имитация чтения датчика температуры
+static float read_temperature(void)
+{
+    // Здесь должен быть реальный код чтения ADC или датчика
+    return 25.5f + (float)(HAL_GetTick() % 1000) / 100.0f;
+}
+
+// Имитация чтения датчика освещенности
+static uint16_t read_light(void)
+{
+    // Здесь должен быть реальный код чтения датчика
+    return (HAL_GetTick() % 4096);
+}
+
+// Обновление данных датчиков
+void ssi_update_data(void)
 {
     static uint32_t last_update = 0;
     uint32_t now = HAL_GetTick();
@@ -137,28 +134,22 @@ void update_ssi_data(void)
     if(now - last_update >= 1000) {
         last_update = now;
         
-        // Обновление значений датчика (имитация)
-        float temp = 25.5 + (float)(HAL_GetTick() % 1000) / 100.0;
-        snprintf(ssi_data.sensor_value, sizeof(ssi_data.sensor_value), 
-                 "%.1f C", temp);
+        // Чтение температуры
+        float temp = read_temperature();
+        snprintf(temperature_str, sizeof(temperature_str), "%.1f °C", temp);
         
-        // Обновление статуса (если не был изменен через CGI)
-        if(strcmp(ssi_data.device_status, "Reset") != 0 &&
-           strcmp(ssi_data.device_status, "Starting...") != 0 &&
-           strcmp(ssi_data.device_status, "Running") != 0 &&
-           strcmp(ssi_data.device_status, "Stopped") != 0 &&
-           strcmp(ssi_data.device_status, "Normal") != 0) {
-            if(HAL_GetTick() % 10000 < 5000) {
-                strcpy(ssi_data.device_status, "Normal");
-            } else {
-                strcpy(ssi_data.device_status, "Warning");
-            }
-        }
+        // Чтение освещенности
+        uint16_t light = read_light();
+        float light_percent = (float)light * 100.0f / 4095.0f;
+        snprintf(light_str, sizeof(light_str), "%d (%.1f%%)", light, light_percent);
         
-        // Обновление времени работы
-        uint32_t seconds = HAL_GetTick() / 1000;
-        snprintf(ssi_data.timestamp, sizeof(ssi_data.timestamp),
-                 "%lu sec", seconds);
+        // Временная метка
+        uint32_t seconds = now / 1000;
+        uint32_t hours = seconds / 3600;
+        uint32_t minutes = (seconds % 3600) / 60;
+        uint32_t secs = seconds % 60;
+        snprintf(timestamp_str, sizeof(timestamp_str), 
+                 "%02lu:%02lu:%02lu", hours, minutes, secs);
     }
 }
 
@@ -166,18 +157,17 @@ void update_ssi_data(void)
 void http_handlers_init(void)
 {
     // Начальные значения
-    strcpy(ssi_data.sensor_value, "Initializing...");
-    strcpy(ssi_data.device_status, "Starting...");
-    strcpy(ssi_data.timestamp, "0 sec");
+    strcpy(temperature_str, "--.- C");
+    strcpy(light_str, "--- lux");
+    strcpy(timestamp_str, "0 sec");
     
     // Регистрация SSI
     http_set_ssi_handler(ssi_handler, ssi_tags, SSI_COUNT);
     
     // Регистрация CGI обработчиков (используем массив tCGI)
-    http_set_cgi_handlers(cgi_handlers, NUM_CGI_HANDLERS);
+    //http_set_cgi_handlers(cgi_handlers, NUM_CGI_HANDLERS);
     
-    printf("HTTP handlers initialized (SSI + CGI)\r\n");
-    printf("SSI tags: sensor, status, time\r\n");
-    printf("CGI handlers: /cgi/control, /cgi/status\r\n");
+    printf("SSI handlers initialized\r\n");
+    printf("Tags: temperature, light, timestamp\r\n");
 }
 /* USER CODE END 0 */
