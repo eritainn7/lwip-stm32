@@ -42,6 +42,8 @@ Core/Src/stm32f7xx_it.c \
 Core/Src/stm32f7xx_hal_msp.c \
 Core/Src/cgi_handlers.c \
 Core/Src/http_handlers.c \
+Core/Src/ha_client/ha_client.c \
+Core/Src/ha_client/ha_parser.c \
 LWIP/App/lwip.c \
 LWIP/Target/ethernetif.c \
 Drivers/BSP/Components/lan8742/lan8742.c \
