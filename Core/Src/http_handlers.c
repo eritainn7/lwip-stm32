@@ -33,17 +33,14 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 {
     switch(iIndex) {
         case SSI_TEMPERATURE:
-                HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
             strncpy(pcInsert, temperature_str, iInsertLen);
             break;
             
         case SSI_LIGHT:
-                HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
             strncpy(pcInsert, light_str, iInsertLen);
             break;
             
         case SSI_TIMESTAMP:
-                HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
             strncpy(pcInsert, timestamp_str, iInsertLen);
             break;
             
