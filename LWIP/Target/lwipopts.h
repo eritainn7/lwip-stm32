@@ -83,6 +83,8 @@
 #define LWIP_HTTPD_CGI_SSI 1
 /*----- Default Value for LWIP_HTTPD_SSI: 0 ---*/
 #define LWIP_HTTPD_SSI 1
+/*----- Default Value for LWIP_HTTPD_MAX_TAG_NAME_LEN: 8 ---*/
+#define LWIP_HTTPD_MAX_TAG_NAME_LEN 128
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/
 #define LWIP_STATS 0
 /*----- Value in opt.h for CHECKSUM_GEN_IP: 1 -----*/
