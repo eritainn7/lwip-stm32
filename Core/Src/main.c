@@ -104,8 +104,9 @@ int main(void)
   MX_GPIO_Init();
   MX_LWIP_Init();
   MX_USART3_UART_Init();
+
   /* USER CODE BEGIN 2 */
-  ssi_update_data();
+  HA_Client_Init();
   http_handlers_init();
   httpd_init();
   http_set_cgi_handlers(cgi_handlers, cgi_handlers_count); 
@@ -113,13 +114,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t last_ha_update = 0;
+  uint32_t last_print = 0;
+
   while (1)
   {
     MX_LWIP_Process();
-    ssi_update_data();   // Данные (обновляет переменные)
-    printf("Hello, World!\r\n");  // ← Правильно
+    if (HAL_GetTick() - last_ha_update >= 5000) {
+        last_ha_update = HAL_GetTick();
+        ssi_update_data(); 
+    }
 
-    HAL_Delay(1);
+    HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
