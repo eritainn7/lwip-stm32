@@ -27,11 +27,17 @@
 #include "http_handlers.h"
 #include "lwip/apps/httpd.h"
 #include "cgi_handlers.h"
+#include "ha_client.h"
+#include "ha_parser.h"
+#include "TM1637.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 #define LWIP_HTTPD_CGI_EXTENSIONS "cgi"  // Только CGI файлы
+
+//Цифровой дисплей TM1637
+TM1637_HandleTypeDef htm1637;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -104,8 +110,11 @@ int main(void)
   MX_GPIO_Init();
   MX_LWIP_Init();
   MX_USART3_UART_Init();
-
   /* USER CODE BEGIN 2 */
+  TM1637_Init(&htm1637, 
+            TM1637_CLK_GPIO_Port, TM1637_CLK_Pin,
+            TM1637_DIO_GPIO_Port, TM1637_DIO_Pin,
+            D4036B);
   HA_Client_Init();
   http_handlers_init();
   httpd_init();
@@ -117,12 +126,59 @@ int main(void)
   uint32_t last_ha_update = 0;
   uint32_t last_print = 0;
 
+  enum DISPLAY_STATES {
+    OFF = 0,
+    TEMPERATURE,
+    LIGHT
+  };
+  int8_t display_state = OFF;
+
+  void setDisplayModeLedIndicator(GPIO_PinState indicators[], int size) {
+    int led_pins[] = {GPIO_PIN_0, GPIO_PIN_7, GPIO_PIN_14};
+
+    for (int i = 0; i < size; i++) {
+      HAL_GPIO_WritePin(GPIOB, led_pins[i], indicators[i]);
+    }
+  }
   while (1)
   {
     MX_LWIP_Process();
     if (HAL_GetTick() - last_ha_update >= 5000) {
         last_ha_update = HAL_GetTick();
         ssi_update_data(); 
+    }
+    
+    if (HAL_GPIO_ReadPin(Display_mode_button_GPIO_Port, Display_mode_button_Pin)) {
+      display_state = (display_state + 1) % 3;
+    }
+
+    //Варианты вывода дисплея
+    switch(display_state) {
+      case OFF:
+        TM1637_ClearDisplay(&htm1637);
+        setDisplayModeLedIndicator(   //Зеленый светодиод - дисплей ничего не показывает
+          (GPIO_PinState[]){GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_RESET}, 3);
+          
+        HAL_Delay(10);
+        break;
+
+      case TEMPERATURE:
+        int16_t temp = getLastTemperature() / 10;
+        TM1637_DisplayInt(&htm1637, temp);
+        setDisplayModeLedIndicator(   //Красный - температура
+          (GPIO_PinState[]){ GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_SET}, 3);
+        
+        HAL_Delay(10);
+        break;
+
+      case LIGHT:
+        int32_t light = getLastLight();
+        TM1637_DisplayInt(&htm1637, (int16_t)light);
+        setDisplayModeLedIndicator(   //Красный - температура
+          (GPIO_PinState[]){ GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_RESET}, 3);
+
+        HAL_Delay(10);
+        break;
     }
 
     HAL_Delay(10);
