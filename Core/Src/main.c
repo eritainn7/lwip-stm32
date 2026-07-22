@@ -31,7 +31,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define LWIP_HTTPD_CGI_EXTENSIONS "cgi,html,htm"
+#define LWIP_HTTPD_CGI_EXTENSIONS "cgi"  // Только CGI файлы
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -58,7 +58,19 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern UART_HandleTypeDef huart3;  // Ваш UART handle
 
+int __io_putchar(int ch)
+{
+    HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
+
+int _write(int file, char *ptr, int len)
+{
+    HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    return len;
+}
 /* USER CODE END 0 */
 
 /**
@@ -93,6 +105,7 @@ int main(void)
   MX_LWIP_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  ssi_update_data();
   http_handlers_init();
   httpd_init();
   http_set_cgi_handlers(cgi_handlers, cgi_handlers_count); 
@@ -104,6 +117,8 @@ int main(void)
   {
     MX_LWIP_Process();
     ssi_update_data();   // Данные (обновляет переменные)
+    printf("Hello, World!\r\n");  // ← Правильно
+
     HAL_Delay(1);
     /* USER CODE END WHILE */
 
