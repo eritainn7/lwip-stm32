@@ -55,6 +55,14 @@ static uint32_t consecutive_errors = 0;
 static int16_t last_temperature = -999;
 static int32_t last_light = -1;
 
+int16_t getLastTemperature(void) {
+    return last_temperature;
+}
+
+int32_t getLastLight(void) {
+    return last_light;
+}
+
 /* Прототипы callback-функций */
 static err_t ha_connected_callback(void *arg, struct tcp_pcb *tpcb, err_t err);
 static err_t ha_recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
