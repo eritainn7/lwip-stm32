@@ -33,14 +33,17 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 {
     switch(iIndex) {
         case SSI_TEMPERATURE:
+                HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
             strncpy(pcInsert, temperature_str, iInsertLen);
             break;
             
         case SSI_LIGHT:
+                HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
             strncpy(pcInsert, light_str, iInsertLen);
             break;
             
         case SSI_TIMESTAMP:
+                HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
             strncpy(pcInsert, timestamp_str, iInsertLen);
             break;
             
@@ -48,7 +51,7 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
             pcInsert[0] = '\0';
             return 0;
     }
-    
+
     return strlen(pcInsert);
 }
 
@@ -57,28 +60,7 @@ static const char *cgi_control_handler(int iIndex, int iNumParams,
                                         char *pcParam[], char *pcValue[])
 {
     printf("CGI Control handler called with %d params\r\n", iNumParams);
-    
-    // Обработка параметров
-    for(int i = 0; i < iNumParams; i++) {
-        printf("  Param[%d]: %s = %s\r\n", i, pcParam[i], pcValue[i]);
         
-        if(strcmp(pcParam[i], "action") == 0) {
-            if(strcmp(pcValue[i], "reset") == 0) {
-                printf("CGI: Reset command received\r\n");
-                strcpy(temperature_str, "Reset");
-            } else if(strcmp(pcValue[i], "start") == 0) {
-                printf("CGI: Start command received\r\n");
-                strcpy(temperature_str, "Running");
-            } else if(strcmp(pcValue[i], "stop") == 0) {
-                printf("CGI: Stop command received\r\n");
-                strcpy(temperature_str, "Stopped");
-            } else if(strcmp(pcValue[i], "normal") == 0) {
-                printf("CGI: Normal mode command received\r\n");
-                strcpy(temperature_str, "Normal");
-            }
-        }
-    }
-    
     // Возвращаем путь к файлу для перенаправления
     return "/index.html";
 }
@@ -89,12 +71,6 @@ static const char *cgi_status_handler(int iIndex, int iNumParams,
 {
     printf("CGI Status handler called\r\n");
     
-    // Обработка параметров статуса
-    for(int i = 0; i < iNumParams; i++) {
-        printf("  Status Param[%d]: %s = %s\r\n", i, pcParam[i], pcValue[i]);
-    }
-    
-    // Возвращаем страницу статуса с SSI тегами
     return "/status.html";
 }
 
@@ -102,20 +78,14 @@ static const char *cgi_status_handler(int iIndex, int iNumParams,
 void httpd_cgi_handler(struct fs_file *file, const char* uri, 
                        int iNumParams, char **pcParam, char **pcValue)
 {
-    // Эта функция не вызывается, но нужна для линковки
-    // Перенаправляем вызовы на наши обработчики
-    if(strcmp(uri, "/cgi/control") == 0) {
-        cgi_control_handler(0, iNumParams, pcParam, pcValue);
-    } else if(strcmp(uri, "/cgi/status") == 0) {
-        cgi_status_handler(1, iNumParams, pcParam, pcValue);
-    }
+        printf("CGI: %s called (ignored)\r\n", uri);
 }
 
 // Имитация чтения датчика температуры
-static float read_temperature(void)
+static int16_t read_temperature(void)
 {
     // Здесь должен быть реальный код чтения ADC или датчика
-    return 25.5f + (float)(HAL_GetTick() % 1000) / 100.0f;
+    return 314;
 }
 
 // Имитация чтения датчика освещенности
@@ -135,13 +105,14 @@ void ssi_update_data(void)
         last_update = now;
         
         // Чтение температуры
-        float temp = read_temperature();
-        snprintf(temperature_str, sizeof(temperature_str), "%.1f °C", temp);
+        int16_t temp_deci = read_temperature();
+        snprintf(temperature_str, sizeof(temperature_str), 
+                 "%d.%d °C", temp_deci / 10, abs(temp_deci % 10));
         
         // Чтение освещенности
         uint16_t light = read_light();
-        float light_percent = (float)light * 100.0f / 4095.0f;
-        snprintf(light_str, sizeof(light_str), "%d (%.1f%%)", light, light_percent);
+        //float light_percent = (float)light * 100.0f / 4095.0f;
+        snprintf(light_str, sizeof(light_str), "%d.%d lx", light);
         
         // Временная метка
         uint32_t seconds = now / 1000;
@@ -157,8 +128,8 @@ void ssi_update_data(void)
 void http_handlers_init(void)
 {
     // Начальные значения
-    strcpy(temperature_str, "--.- C");
-    strcpy(light_str, "--- lux");
+    strcpy(temperature_str, "--.- °C");
+    strcpy(light_str, "--- lx");
     strcpy(timestamp_str, "0 sec");
     
     // Регистрация SSI
