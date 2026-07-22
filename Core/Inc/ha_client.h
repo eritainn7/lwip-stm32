@@ -21,6 +21,12 @@
 #define HA_RETRY_COUNT          2  
 
 /**
+ * @brief Геттеры для инкапсулированных переменных
+ */
+int16_t getLastTemperature(void);
+int32_t getLastLight(void);
+
+/**
  * @brief  Инициализация HA клиента
  */
 void HA_Client_Init(void);
