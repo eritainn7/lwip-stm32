@@ -59,6 +59,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define Display_mode_button_Pin GPIO_PIN_13
 #define Display_mode_button_GPIO_Port GPIOC
+#define TM1637_CLK_Pin GPIO_PIN_5
+#define TM1637_CLK_GPIO_Port GPIOA
+#define TM1637_DIO_Pin GPIO_PIN_6
+#define TM1637_DIO_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
